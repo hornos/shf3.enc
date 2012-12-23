@@ -1,0 +1,1 @@
+gpg_opts="--cipher-algo AES256 -z9"

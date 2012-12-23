@@ -1,0 +1,92 @@
+#!/bin/bash
+# bootstrap
+source ${HOME}/shf3/lib/header
+# local lib
+include $(dirname ${BASH_SOURCE})/../lib/
+# imports
+import i/can
+
+function mypass/check() {
+  # simple x check
+  i/can/execute pwgen ssss-split ssss-combine
+}
+if ! mypass/check ; then exit 1; fi
+
+echo "TODO"; exit 1
+
+function mypass/init() {
+  local _h="${1}"
+  local _mid="${sys_mid_dir}/mypass/${_h}"
+  if i/can/find "${_mid}" ; then exit 1; fi
+
+  cat > "${_mid}" <<EOF
+# 2/3 Shamir's Secret Sharing Scheme
+mid_mypass_t=2
+mid_mypass_n=3
+mid_mypass_p="\$HOME/1 \$HOME/2 \$HOME/3"
+EOF
+  sys/edit "${_mid}"
+  sys/mid "mypass/${_h}"
+
+  # init dirs
+  for i in ${mid_mypass_p}
+  # init db
+}
+
+cmd=${1:-help}
+case "${cmd}" in
+  init)
+    shift
+    mypass/init "${1:-${gbn}}"
+
+  ;;
+esac
+
+
+### args
+_l=21
+_u=""
+_m="LIST"
+_f=""
+_t=""
+_a=""
+while getopts hf:t:a:l:p:n:d:u:s:v o; do
+  case "$o" in
+    f) _f=$OPTARG;;
+    t) _t=$OPTARG;;
+    a) _a=$OPTARG;;
+    l) _l=$OPTARG;;
+    u) _u=$OPTARG;;
+    p) _m="CHANGE"; _u=$OPTARG;;
+    n) _m="CREATE"; _u=$OPTARG;;
+    d) _m="DELETE"; _u=$OPTARG;;
+    s) _m="SEARCH"; _u=$OPTARG;;
+    v) gdbg=true;;
+    h|*) help/passmgr;;
+  esac
+done
+
+### main
+echo
+msg
+gui/line
+
+enc_pass_db="${grd}/sql/${enc_pass_db}"
+
+# overrides
+if ! test -z "${_f}" ; then
+  enc_pass_db="${_f}"
+fi
+if ! test -z "${_t}" ; then
+  enc_pass_tb="${_t}"
+fi
+if ! test -z "${_a}" ; then
+  enc_pass_acc="${_a}"
+fi
+
+if test "${_m}" = "SEARCH" ; then
+  _m="LIST"
+  enc/pass/mgr "${_m}" ${_l} | grep "${_u}"
+else
+  enc/pass/mgr "${_m}" ${_l} "${_u}"
+fi

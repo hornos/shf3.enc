@@ -1,0 +1,3 @@
+### global
+shf3_enc_root=$(cd $(dirname "${BASH_SOURCE}");cd ..;pwd -P)
+PATH=${PATH}:${shf3_enc_root}/bin

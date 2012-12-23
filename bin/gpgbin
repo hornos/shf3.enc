@@ -1,0 +1,60 @@
+#!/bin/bash
+# bootstrap
+source ${HOME}/shf3/lib/header
+# local lib
+include $(dirname ${BASH_SOURCE})/../lib/
+# imports
+import i/can
+import gpg
+
+pastebin="http://pastebin.com/raw.php"
+
+function gpgbin/check() {
+  # simple x check
+  i/can/execute pastebincl
+}
+if ! gpgbin/check ; then exit 1; fi
+
+
+function help/gpgbin () {
+  cat <<EOF
+
+Install:
+  http://pastebin.com/dSyh0xCc
+
+Usage:
+  gpgbin cmd ...
+         post [file] [expiry] - paste a file or a message (-) with expiry
+         read url             - read the bin at url (url can be id)
+
+  | gpgbin post - [expiry]    - used in a pipe
+
+EOF
+  exit 1
+}
+
+function gpgbin/post() {
+  local _f=${1:--}
+  local _e=${2:-1M}
+  gpg/encode ${_f} | \
+  pastebincl -e ${_e} -g
+}
+
+function gpgbin/read() {
+  local _url=${1##*/}
+  if test -z "${_url}" ; then exit 1; fi
+
+  curl -s ${pastebin}?i=${_url} | \
+  gpg/decode
+}
+
+cmd=${1:-help}
+case ${cmd} in
+  post/read)
+    shift
+    gpgbin/${cmd} $*
+  ;;
+  help|*)
+    help/gpgbin
+  ;;
+esac

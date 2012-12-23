@@ -1,0 +1,56 @@
+#!/bin/bash
+# bootstrap
+source ${HOME}/shf3/lib/header
+# local lib
+include $(dirname ${BASH_SOURCE})/../lib/
+# imports
+import gpg
+import i/can
+import get/me
+
+function mailinator/check() {
+  # simple x check
+  i/can/execute mixminion
+}
+if ! mailinator/check ; then exit 1; fi
+
+
+function help/mailinator() {
+  cat <<EOF
+
+Usage:
+  mailinator cmd ...
+             send   [file] [id] - send file or a message (-)
+             tor    [file] [id] - send via tor (rapid)
+             decode msg         - decode message
+
+EOF
+  exit 1
+}
+
+cmd=${1:-help}
+case "${cmd}" in
+  decode)
+    shift
+    echo "$*" | \
+    gpg/decode
+    exit 0
+  ;;
+  send)
+    shift
+  ;;
+  tor)
+    shift
+    prerun="torto -x"
+  ;;
+  help|*)
+    help/mailinator
+  ;;
+esac
+
+io=${1:--}
+id=${1:-$(get/me/id)}
+to="${id}@mailinator.com"
+read -p "Send mail to: ${to}?"
+gpg/encode ${io} | \
+${prerun} mixminion send -Q -t ${to}
